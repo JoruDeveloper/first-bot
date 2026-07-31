@@ -1,13 +1,11 @@
-import os
-from pathlib import Path
+"""Configuración del bot desde .env.
 
-from dotenv import load_dotenv
+PASO 1: crea este módulo.
+- Carga variables de entorno con python-dotenv.
+- Expone INPUT_PATH, OUTPUT_PATH, WEB_FORM_URL, HEADLESS como constantes.
+- Usa rutas relativas con defaults razonables.
+"""
 
-load_dotenv()
 
-INPUT_PATH = Path(os.getenv("INPUT_PATH", "./data/input"))
-OUTPUT_PATH = Path(os.getenv("OUTPUT_PATH", "./data/output"))
-WEB_FORM_URL = os.getenv("WEB_FORM_URL", "https://rpachallenge.com/")
-HEADLESS = os.getenv("HEADLESS", "true").lower() == "true"
-
-LOG_DIR = OUTPUT_PATH / "logs"
+def leer_config():
+    """Lee y expone la configuración desde .env. Implementar."""

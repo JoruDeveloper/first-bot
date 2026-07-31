@@ -1,54 +1,17 @@
-from abc import ABC, abstractmethod
-from pathlib import Path
+"""Lectura de archivos con pandas (patrón Strategy + Factory).
 
-import pandas as pd
-
-from src.first_bot.exceptions import FileReadError
-from src.first_bot.models import COLUMNAS_ARCHIVO
-
-
-class BaseReader(ABC):
-    @abstractmethod
-    def read(self, filepath: Path) -> pd.DataFrame:
-        ...
+PASO 4: crea este módulo.
+- BaseReader (ABC) con método abstracto read(filepath) -> DataFrame.
+- CsvReader: pd.read_csv.
+- XlsxReader: pd.read_excel(engine="openpyxl").
+- reader_factory(extension) -> BaseReader según .csv/.xlsx/.xls.
+- Lanza FileReadError si el archivo no se puede leer.
+"""
 
 
-class CsvReader(BaseReader):
-    def read(self, filepath: Path) -> pd.DataFrame:
-        try:
-            df = pd.read_csv(filepath)
-        except Exception as e:
-            raise FileReadError(f"No se pudo leer el CSV: {filepath} — {e}") from e
-        return self._normalizar(df)
-
-    def _normalizar(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = df.rename(columns={
-            col: col.strip()
-            for col in df.columns
-        })
-        return df
+class BaseReader:
+    """Clase abstracta de lector de archivos. Implementar."""
 
 
-class XlsxReader(BaseReader):
-    def read(self, filepath: Path) -> pd.DataFrame:
-        try:
-            df = pd.read_excel(filepath, engine="openpyxl")
-        except Exception as e:
-            raise FileReadError(f"No se pudo leer el XLSX: {filepath} — {e}") from e
-        return self._normalizar(df)
-
-    def _normalizar(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = df.rename(columns={
-            col: col.strip()
-            for col in df.columns
-        })
-        return df
-
-
-def reader_factory(extension: str) -> BaseReader:
-    ext = extension.lower().lstrip(".")
-    if ext == "csv":
-        return CsvReader()
-    if ext in ("xlsx", "xls"):
-        return XlsxReader()
-    raise FileReadError(f"Extensión no soportada: {extension}")
+def reader_factory(extension):
+    """Retorna el lector según la extensión. Implementar."""

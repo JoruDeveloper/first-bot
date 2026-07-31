@@ -1,10 +1,9 @@
-from src.first_bot.orchestrator import Orchestrator
+"""Entrypoint del bot.
+
+PASO 11: crea este módulo.
+- main() instancia Orchestrator y llama run().
+"""
 
 
 def main():
-    bot = Orchestrator()
-    bot.run()
-
-
-if __name__ == "__main__":
-    main()
+    """Punto de entrada. Implementar."""

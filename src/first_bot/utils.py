@@ -1,9 +1,9 @@
-from pathlib import Path
-from typing import Union
+"""Helpers de rutas.
 
-import src.first_bot.config as cfg
+PASO 9: crea este módulo.
+- output_filename(input_path) -> Path: retorna OUTPUT_PATH/resultado_{stem}.csv.
+"""
 
 
-def output_filename(input_path: Union[str, Path]) -> Path:
-    path = Path(input_path)
-    return cfg.OUTPUT_PATH / f"resultado_{path.stem}.csv"
+def output_filename(input_path):
+    """Calcula la ruta del archivo de salida. Implementar."""

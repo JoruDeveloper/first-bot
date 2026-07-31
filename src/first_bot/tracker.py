@@ -1,22 +1,11 @@
-from pathlib import Path
+"""Detección de archivos ya procesados.
 
-import src.first_bot.config as cfg
+PASO 7: crea este módulo.
+- get_unprocessed_files() -> list[Path]:
+  lista los .xlsx/.xls/.csv de INPUT_PATH y excluye los que ya tienen
+  su archivo resultado_*.csv en OUTPUT_PATH (compara nombres base).
+"""
 
-EXTENSIONES = {".xlsx", ".xls", ".csv"}
 
-
-def get_unprocessed_files() -> list[Path]:
-    input_files = sorted(
-        p for p in cfg.INPUT_PATH.glob("*")
-        if p.suffix.lower() in EXTENSIONES
-    )
-    output_names = {
-        p.stem.replace("resultado_", "")
-        for p in cfg.OUTPUT_PATH.glob("resultado_*.csv")
-    }
-
-    pendientes = [
-        f for f in input_files
-        if f.stem not in output_names
-    ]
-    return pendientes
+def get_unprocessed_files():
+    """Retorna los archivos de entrada pendientes de procesar. Implementar."""

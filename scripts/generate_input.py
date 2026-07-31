@@ -1,4 +1,8 @@
-"""Genera 20 filas de prueba en INPUT_PATH como .xlsx y .csv."""
+"""Genera 20 filas de prueba en INPUT_PATH como .xlsx y .csv.
+
+Autónomo: no depende de módulos de first_bot para poder usarse en la
+rama template mientras los módulos aún son stubs.
+"""
 
 import os
 import random
@@ -8,10 +12,14 @@ from pathlib import Path
 
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+INPUT_PATH = Path(os.getenv("INPUT_PATH", "./data/input"))
 
-from first_bot.config import INPUT_PATH
-from first_bot.models import COLUMNAS_ARCHIVO
+COLUMNAS_ARCHIVO = [
+    "First Name", "Last Name", "Company Name", "Role in Company",
+    "Address", "Email", "Phone Number",
+    "tipo_solicitud", "fecha", "prioridad",
+    "identificador", "descripcion", "estado",
+]
 
 NOMBRES = [
     ("Carlos", "García"), ("María", "López"), ("Juan", "Martínez"),
