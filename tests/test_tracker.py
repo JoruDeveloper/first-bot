@@ -1,15 +1,20 @@
 import tempfile
+from datetime import date
 from pathlib import Path
 
 import pytest
 
-from src.first_bot.tracker import get_unprocessed_files
+from first_bot.tracker import (
+    ProcessableInputFile,
+    ProcessableOutputFile,
+    get_unprocessed_files,
+)
 
 
 @pytest.fixture
 def tracker_env():
     with tempfile.TemporaryDirectory() as input_dir, tempfile.TemporaryDirectory() as output_dir:
-        import src.first_bot.config as cfg
+        import first_bot.config as cfg
         old_input, old_output = cfg.INPUT_PATH, cfg.OUTPUT_PATH
         cfg.INPUT_PATH = Path(input_dir)
         cfg.OUTPUT_PATH = Path(output_dir)
@@ -18,46 +23,119 @@ def tracker_env():
         cfg.OUTPUT_PATH = old_output
 
 
-def test_sin_archivos_input(tracker_env):
-    input_dir, _ = tracker_env
-    pendientes = get_unprocessed_files()
-    assert pendientes == []
+def _fecha_dir(base: Path, rel: str) -> Path:
+    d = base / rel
+    d.mkdir(parents=True, exist_ok=True)
+    return d
 
 
-def test_archivos_pendientes_sin_output(tracker_env):
-    input_dir, _ = tracker_env
-    (input_dir / "a.csv").touch()
-    (input_dir / "b.xlsx").touch()
-    pendientes = get_unprocessed_files()
-    assert len(pendientes) == 2
+class TestDataclasses:
+    def test_extrae_atributos_de_la_ruta(self, tracker_env):
+        input_dir, _ = tracker_env
+        f = input_dir / "2028" / "01" / "15" / "solicitudes.csv"
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.touch()
+
+        obj = ProcessableInputFile.from_path(f, input_dir)
+
+        assert obj.year == 2028
+        assert obj.month == 1
+        assert obj.day == 15
+        assert obj.date == date(2028, 1, 15)
+        assert obj.path_dir == "2028/01/15/solicitudes.csv"
+        assert obj.full_path == f.resolve()
+
+    def test_igualdad_input_output_misma_ruta(self):
+        inp = ProcessableInputFile(
+            2028, 1, 15, date(2028, 1, 15),
+            "2028/01/15/a.csv", Path("/abs/in/2028/01/15/a.csv"),
+        )
+        out = ProcessableOutputFile(
+            2028, 1, 15, date(2028, 1, 15),
+            "2028/01/15/a.csv", Path("/abs/out/2028/01/15/a.csv"),
+        )
+        assert inp == out
+
+    def test_hash_consistente_entre_input_output(self):
+        inp = ProcessableInputFile(
+            2028, 1, 15, date(2028, 1, 15),
+            "2028/01/15/a.csv", Path("/abs/in/2028/01/15/a.csv"),
+        )
+        out = ProcessableOutputFile(
+            2028, 1, 15, date(2028, 1, 15),
+            "2028/01/15/a.csv", Path("/abs/out/2028/01/15/a.csv"),
+        )
+        assert hash(inp) == hash(out)
+
+    def test_distinto_path_dir_no_es_igual(self):
+        a = ProcessableInputFile(
+            2028, 1, 15, date(2028, 1, 15),
+            "2028/01/15/a.csv", Path("/abs/in/2028/01/15/a.csv"),
+        )
+        b = ProcessableOutputFile(
+            2028, 1, 15, date(2028, 1, 15),
+            "2028/01/15/b.csv", Path("/abs/out/2028/01/15/b.csv"),
+        )
+        assert a != b
+
+    def test_diferencia_de_conjuntos_elimina_iguales(self):
+        inp = ProcessableInputFile(
+            2028, 1, 15, date(2028, 1, 15),
+            "2028/01/15/a.csv", Path("/abs/in/2028/01/15/a.csv"),
+        )
+        out = ProcessableOutputFile(
+            2028, 1, 15, date(2028, 1, 15),
+            "2028/01/15/a.csv", Path("/abs/out/2028/01/15/a.csv"),
+        )
+        assert len({inp} - {out}) == 0
 
 
-def test_archivo_ya_procesado_se_omite(tracker_env):
-    input_dir, output_dir = tracker_env
-    (input_dir / "data.csv").touch()
-    (input_dir / "other.xlsx").touch()
-    (output_dir / "resultado_data.csv").touch()
+class TestGetUnprocessedFiles:
+    def test_sin_archivos(self, tracker_env):
+        assert get_unprocessed_files() == []
 
-    pendientes = get_unprocessed_files()
-    assert len(pendientes) == 1
-    assert pendientes[0].name == "other.xlsx"
+    def test_archivos_pendientes_sin_output(self, tracker_env):
+        input_dir, _ = tracker_env
+        _fecha_dir(input_dir, "2028/01/15")
+        (input_dir / "2028/01/15/a.csv").touch()
+        (input_dir / "2028/01/15/b.xlsx").touch()
 
+        pendientes = get_unprocessed_files()
 
-def test_ignora_extensiones_no_soportadas(tracker_env):
-    input_dir, _ = tracker_env
-    (input_dir / "nota.txt").touch()
-    (input_dir / "imagen.png").touch()
-    (input_dir / "valido.csv").touch()
+        assert len(pendientes) == 2
 
-    pendientes = get_unprocessed_files()
-    assert len(pendientes) == 1
-    assert pendientes[0].name == "valido.csv"
+    def test_archivo_procesado_se_omite(self, tracker_env):
+        input_dir, output_dir = tracker_env
+        _fecha_dir(input_dir, "2028/01/15")
+        _fecha_dir(output_dir, "2028/01/15")
+        (input_dir / "2028/01/15/a.csv").touch()
+        (input_dir / "2028/01/15/b.xlsx").touch()
+        (output_dir / "2028/01/15/a.csv").touch()
 
+        pendientes = get_unprocessed_files()
 
-def test_todos_procesados(tracker_env):
-    input_dir, output_dir = tracker_env
-    (input_dir / "a.csv").touch()
-    (output_dir / "resultado_a.csv").touch()
+        assert len(pendientes) == 1
+        assert pendientes[0].path_dir == "2028/01/15/b.xlsx"
 
-    pendientes = get_unprocessed_files()
-    assert pendientes == []
+    def test_ignora_extensiones_no_soportadas(self, tracker_env):
+        input_dir, _ = tracker_env
+        _fecha_dir(input_dir, "2028/01/15")
+        (input_dir / "2028/01/15/nota.txt").touch()
+        (input_dir / "2028/01/15/imagen.png").touch()
+        (input_dir / "2028/01/15/valido.csv").touch()
+
+        pendientes = get_unprocessed_files()
+
+        assert len(pendientes) == 1
+        assert pendientes[0].path_dir == "2028/01/15/valido.csv"
+
+    def test_ignora_archivos_fuera_del_patron_fecha(self, tracker_env):
+        input_dir, _ = tracker_env
+        (input_dir / "plano.csv").touch()
+        _fecha_dir(input_dir, "2028/01/15")
+        (input_dir / "2028/01/15/valido.csv").touch()
+
+        pendientes = get_unprocessed_files()
+
+        assert len(pendientes) == 1
+        assert pendientes[0].path_dir == "2028/01/15/valido.csv"

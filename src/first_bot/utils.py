@@ -1,9 +1,9 @@
 from pathlib import Path
-from typing import Union
 
 import first_bot.config as cfg
+from first_bot.tracker import ProcessableInputFile
 
 
-def output_filename(input_path: Union[str, Path]) -> Path:
-    path = Path(input_path)
-    return cfg.OUTPUT_PATH / f"resultado_{path.stem}.csv"
+def output_filename(input_file: ProcessableInputFile) -> Path:
+    """Devuelve la ruta de salida reflejando la ruta relativa del input."""
+    return cfg.OUTPUT_PATH / input_file.path_dir

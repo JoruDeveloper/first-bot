@@ -1,6 +1,5 @@
-"""Genera 20 filas de prueba en INPUT_PATH como .xlsx y .csv."""
+"""Genera datos de prueba en INPUT_PATH bajo la estructura YYYY/MM/DD."""
 
-import os
 import random
 import sys
 from datetime import date
@@ -36,7 +35,6 @@ ESTADOS = ["pendiente", "en_proceso", "completada"]
 
 
 def generar_datos(n: int = 20) -> list[dict]:
-    random.seed(42)
     filas = []
     for i in range(n):
         nombre, apellido = random.choice(NOMBRES)
@@ -59,20 +57,30 @@ def generar_datos(n: int = 20) -> list[dict]:
 
 
 def main():
-    INPUT_PATH.mkdir(parents=True, exist_ok=True)
+    solicitudes = INPUT_PATH / "2028" / "01" / "15"
+    reclamos = INPUT_PATH / "2028" / "01" / "16"
+    solicitudes.mkdir(parents=True, exist_ok=True)
+    reclamos.mkdir(parents=True, exist_ok=True)
 
-    datos = generar_datos(20)
-    df = pd.DataFrame(datos)
+    random.seed(1)
+    df_a = pd.DataFrame(generar_datos(20))
+    random.seed(2)
+    df_b = pd.DataFrame(generar_datos(20))
+    random.seed(3)
+    df_c = pd.DataFrame(generar_datos(20))
 
-    xlsx_path = INPUT_PATH / "solicitudes_prueba.xlsx"
-    csv_path = INPUT_PATH / "solicitudes_prueba.csv"
+    csv_path = solicitudes / "solicitudes_a.csv"
+    xlsx_path = solicitudes / "pedidos_b.xlsx"
+    reclamo_path = reclamos / "reclamos_c.csv"
 
-    df.to_excel(xlsx_path, index=False, engine="openpyxl")
-    df.to_csv(csv_path, index=False)
+    df_a.to_csv(csv_path, index=False)
+    df_b.to_excel(xlsx_path, index=False, engine="openpyxl")
+    df_c.to_csv(reclamo_path, index=False)
 
-    print(f"Generados 20 registros en:")
-    print(f"  {xlsx_path}")
+    print("Generados 20 registros en cada archivo:")
     print(f"  {csv_path}")
+    print(f"  {xlsx_path}")
+    print(f"  {reclamo_path}")
 
 
 if __name__ == "__main__":
