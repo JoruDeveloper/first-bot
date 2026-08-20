@@ -1,3 +1,5 @@
+Alumno: Guillermo Cedeño
+
 # Asignación: Sistema de tracking por fechas con conjuntos
 
 ## Descripción de la tarea
